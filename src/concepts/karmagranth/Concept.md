@@ -6,6 +6,7 @@ summary: A visual way of filtering all 158 karma subtypes and studying them agai
 icon: "🪷"
 tagline: Explore karma families, subtypes, and stage transitions.
 index: 1
+password: "inprogress"
 ---
 
 Karma Granth Lab is built on the basis of Karmagranth which is a 6 granth Series written by Pujya Devendra Suri Ji Maharaja.
