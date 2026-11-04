@@ -256,12 +256,15 @@ function sourceLinks() {
 
 function ExternalNoteLinks() {
   return (
-    <div className="kg-source-links">
+    <div className="kg-source-links mt-3" aria-label="External source links">
+      <b>Explore full notes on : </b>
+      <ol className=" list-decimal space-y-3 pl-5 font-medium tracking-wide ">
       {sourceLinks().map((source) => (
-        <a key={source.url} href={source.url} target="_blank" rel="noreferrer" aria-label={`Explore full notes: ${source.label}`}>
-          Explore full notes <span aria-hidden="true">↗</span>
-        </a>
+        <li><a key={source.url} href={source.url} target="_blank" rel="noreferrer" aria-label={`Explore full notes: ${source.label}`}>
+           {source.label} <span aria-hidden="true">↗</span>
+        </a></li>
       ))}
+      </ol>
     </div>
   );
 }
@@ -299,7 +302,7 @@ function KarmaTree({ roots, selectedId, selectedAncestors, expanded, onToggle, o
   const selectedSubStage = filter?.subStage === 'all' ? stageDetails.at(-1)?.label : filter?.subStage;
   return (
     <section className="kg-canvas-graph" aria-label="Karma hierarchy">
-      <div className="kg-canvas-head"><div><span className="kg-kicker">Karma hierarchy</span><h3>Karma View</h3></div><div className="kg-canvas-actions"><button type="button" onClick={onCollapseToLevelOne}>Collapse</button><button type="button" onClick={onExpandAll}>Expand</button></div></div>
+      <div className="kg-canvas-head"><div><span className="kg-kicker">Karma hierarchy</span><h3>Karma View <h4><i>(Total count: {countSum? countSum : 158})</i></h4></h3></div><div className="kg-canvas-actions"><button type="button" onClick={onCollapseToLevelOne}>Collapse</button><button type="button" onClick={onExpandAll}>Expand</button></div></div>
       {countSummary && stageDetails.length > 0 && <div className="kg-stage-tabs" role="group" aria-label={`Stages within ${stageLabel(filter.gunasthanId)}`}>{stageDetails.map((detail) => <button key={detail.label} type="button" className={selectedSubStage === detail.label ? 'is-active' : ''} aria-pressed={selectedSubStage === detail.label} onClick={() => onChangeSubStage(detail.label)}>{detail.label}</button>)}</div>}
       {countSummary && <section className="kg-count-summary" aria-label={`${filter.relationLabel} count summary for ${stageLabel(filter.gunasthanId)}${familyScoped ? `, ${countSummary.familyLabel} family` : ''}`}>
         <div className="kg-count-heading"><div><span className="kg-kicker">{familyScoped ? 'Family count' : 'Stage count'}</span><h4>{filter.relationLabel} at {stageLabel(filter.gunasthanId)}{filter.subStage && filter.subStage !== 'all' ? ` · ${filter.subStage}` : ''}{familyScoped ? ` · ${countSummary.familyLabel}` : ''}</h4></div><div className="kg-count-heading-links"><a href={stageNoteUrl(filter.relationType, filter.gunasthanId)} target="_blank" rel="noreferrer">Explore stage details <span aria-hidden="true">↗</span></a><a href={countSummary.sourceUrl} target="_blank" rel="noreferrer">Count details <span aria-hidden="true">↗</span></a></div></div>
@@ -321,11 +324,11 @@ function KarmaTree({ roots, selectedId, selectedAncestors, expanded, onToggle, o
   );
 }
 
-function Inspector({ selectedNode, onSelectFilter, onClose }) {
+function Inspector({ selectedNode, onSelectFilter }) {
   if (!selectedNode) {
     return (
       <aside className="kg-inspector" aria-label="Karma detail inspector">
-        <div className="kg-empty-inspector"><button type="button" className="kg-inspector-close" onClick={onClose} aria-label="Close detail panel">×</button><span className="kg-kicker">Details</span><h3>Select a karma node</h3><p>Choose a node in Karma View to see its stages and relationships.</p><ExternalNoteLinks /></div>
+        <div className="kg-empty-inspector"><span className="kg-kicker">Details</span><h3>Select a karma node</h3><p>Choose a node in Karma View to see its stages and relationships.</p><ExternalNoteLinks /></div>
       </aside>
     );
   }
@@ -339,22 +342,26 @@ function Inspector({ selectedNode, onSelectFilter, onClose }) {
   return (
     <aside className="kg-inspector" aria-label="Karma detail inspector" aria-live="polite">
       <div className="kg-inspector-head">
-        <button type="button" className="kg-inspector-close" onClick={onClose} aria-label="Close detail panel">×</button>
         <h3>{nodeLabel(selectedNode)}</h3>
         <p className="kg-path">{path.join(' / ')}</p>
       </div>
       <div className="kg-inspector-body">
-        {selectedNode.summary && <section><h4>Overview</h4><p>{selectedNode.summary}</p><a className="kg-topic-link" href={selectedNode.sourceUrl} target="_blank" rel="noreferrer">Explore full notes <span aria-hidden="true">↗</span></a></section>}
-        <section>
-          <h4>Relationships</h4>
-          {grouped.map((group) => (
-            <div className="kg-relation-group" key={group.id}>
-              <h5>{group.label}</h5>
-              {group.records.length ? group.records.map((record) => {
+        {selectedNode.summary && <section><h4>Overview</h4><p>{selectedNode.summary}</p><a className="kg-topic-link" href={selectedNode.sourceUrl} target="_blank" rel="noreferrer">Explore full notes on {path.join(' / ')} <span aria-hidden="true">↗</span></a></section>}
+        {grouped?.[0]?.records?.length > 0 ? (
+          <section>
+            <h4>Relationships</h4>
+            {grouped.map((group) => (
+              <div className="kg-relation-group" key={group.id}>
+                <h5>{group.label}</h5>
+                {group.records.length ? group.records.map((record) => {
                 const stage = record.gunasthanId || 'g14';
                 const metaLabel = record.state === 'non-occurrence' ? 'Pause Stage' : record.state === 'cessation' ? 'Stop Stage' : 'Available Stage';
                 const stageDescription = record.displayPeriod || record.stageContext || stageLabel(stage);
-                return <button key={record.id} className="kg-record-row" type="button" onClick={() => onSelectFilter(record)} aria-label={`Filter Karma View to ${group.label} at ${stageDescription}`}>
+                return <button key={record.id} 
+                className="kg-record-row" type="button" 
+                onClick={() => onSelectFilter(record)} 
+                aria-label={`Filter Karma View to ${group.label} at ${stageDescription}`} 
+                title={`Filter Karma View to ${group.label} at ${stageDescription}`}>
                   <span className="kg-record-main"><span className="kg-record-meta-label">{metaLabel}</span><strong>{record.sourceTerm}{record.state === 'unlocked' ? ' · unlocked' : ''}</strong></span>
                   <span className="kg-record-stage">{stageDescription}{record.subStage ? ` · ${record.subStage}` : ''}</span>
                   {record.displayNote && <small>{record.displayNote}</small>}
@@ -362,7 +369,12 @@ function Inspector({ selectedNode, onSelectFilter, onClose }) {
               }) : <p className="kg-muted">No entries.</p>}
             </div>
           ))}
-        </section>
+        </section>) : (
+          <section>
+            <h4>Relationships</h4>
+            <i><b><p className="kg-muted">Select a subtype of this node to view its relationships with different types.</p></b></i>
+          </section>
+        )}
       </div>
     </aside>
   );
@@ -408,6 +420,10 @@ export default function KarmaGranthLab() {
     setExpanded((current) => new Set([...current, ...ancestorsOf(selectedId)]));
   }, [selectedId]);
 
+  useEffect(() => {
+    setFilterOpen(true)
+  }, []);
+
   function selectNode(id) { setSelectedId(id); }
   function selectFilter(record) {
     setFilterCategory(record.relationType);
@@ -437,7 +453,7 @@ export default function KarmaGranthLab() {
           <div className="kg-toolbar-top">
             <label className="kg-search">Search names, aliases, note keywords, or relationship terms<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Try ‘Aharaka’, ‘Vichhed’, ‘body’…" /></label>
             <label className="kg-family-filter">Karma family<select value={familyFilter} onChange={(event) => setFamilyFilter(event.target.value)}><option value="">All families</option>{families.map((family) => <option key={family.id} value={family.id}>{nodeLabel(family)}</option>)}</select></label>
-            <button type="button" className={`kg-filter-toggle${activeFilter ? ' is-filtered' : ''}`} aria-expanded={filterOpen} onClick={() => setFilterOpen((open) => !open)}>Filter{activeFilter ? ' · active' : ''}</button>
+            {/* <button type="button" className={`kg-filter-toggle${activeFilter ? ' is-filtered' : ''}`} aria-expanded={filterOpen} onClick={() => setFilterOpen((open) => !open)}>Filter{activeFilter ? ' · active' : ''}</button> */}
             <button type="button" className="kg-reset" onClick={reset}>Reset view</button>
           </div>
           {filterOpen && <div className="kg-filter-panel">
@@ -454,7 +470,7 @@ export default function KarmaGranthLab() {
           <main className="kg-main-view">
             <KarmaTree roots={visibleRoots} selectedId={selectedId} selectedAncestors={selectedAncestors} expanded={expanded} onToggle={toggleNode} onSelect={selectNode} onCollapseToLevelOne={() => setExpanded(new Set())} onExpandAll={expandAll} visibleNodeIds={visibleNodeIds} filter={activeFilter} totalPossibleNodeIds={totalPossibleNodeIds} countSummary={countSummary} displayMode={displayMode} onChangeDisplayMode={setDisplayMode} onChangeSubStage={setFilterSubStage} />
           </main>
-          <Inspector selectedNode={selectedNode} onSelectFilter={selectFilter} onClose={() => setSelectedId('')} />
+          <Inspector selectedNode={selectedNode} onSelectFilter={selectFilter} />
         </div>
       </div>
     </LabEmbedded>
